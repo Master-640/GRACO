@@ -1,0 +1,16 @@
+# Multilayer (multiplex) network dismantling with a layer-aware GNN.
+# The multiplex generator stacks layers into one graph with per-edge layer ids;
+# MultiplexGCN aggregates per layer then fuses across layers.
+base: base.yaml
+run_name: dismantling_multiplex
+generator: {type: multiplex, num_nodes: [30, 50], num_layers: 3}
+env: {type: dismantling}
+algo:
+  type: dqn
+  n_step: 5
+  double: true
+  model:
+    encoder: {type: multiplex_gcn, hidden_dim: 64, num_layers: 3}
+    head: {type: q_node}
+  buffer: {type: nstep_replay, capacity: 100000}
+trainer: {num_envs: 16, iterations: 3000, baselines: [degree, adaptive_degree, random]}
