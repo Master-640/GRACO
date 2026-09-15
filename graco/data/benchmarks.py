@@ -41,10 +41,6 @@ def default_cache_dir() -> Path:
     return d
 
 
-def list_datasets() -> Dict[str, dict]:
-    return DATASETS
-
-
 def fetch(name: str, cache_dir: str | None = None, timeout: float = 30.0) -> str:
     """Download (once) a registered dataset; return the local file path."""
     if name not in DATASETS:

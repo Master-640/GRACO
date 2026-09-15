@@ -1,6 +1,5 @@
 # GRACO
 
-[![CI](https://github.com/graco/graco/actions/workflows/ci.yml/badge.svg)](https://github.com/graco/graco/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1%2B-ee4c2c.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -24,7 +23,7 @@ config-driven framework — and both ship as first-class baselines.
 
 - Python ≥ 3.9
 - PyTorch ≥ 2.1 (CPU or CUDA build)
-- NumPy, NetworkX, SciPy, OmegaConf, tqdm (installed automatically)
+- NumPy, NetworkX, SciPy, OmegaConf (installed automatically)
 
 GRACO ships its own scatter-based message passing, so `torch-geometric` is **not**
 required.
@@ -47,7 +46,7 @@ Then install (editable, so your edits take effect immediately):
 ```bash
 git clone https://github.com/graco/graco.git && cd graco
 pip install -e .            # core dependencies
-# pip install -e ".[all]"   # optional: torch-geometric interop, tensorboard, wandb, dev tools
+# pip install -e ".[all]"   # optional: tensorboard, wandb, ILP solver, docs, dev tools
 ```
 
 For GPU support, install a CUDA build of PyTorch first (see
@@ -152,11 +151,11 @@ trainer:    {num_envs: 32, iterations: 3000, baselines: [degree, random]}
 Both reference systems are faithful, first-class baselines (`graco/baselines/`) that
 reuse everything that fits and override only what is paper-specific:
 
-- **FINDER** (`configs/finder.yaml`, `type: finder`) — dismantling env with constant
+- **FINDER** (`graco/configs/finder.yaml`, `type: finder`) — dismantling env with constant
   `ones[n,2]` node inputs + a graph `aux_feat` readout, GraphSAGE (**sum**
   aggregation), a bilinear cross-product Q-head (`finder_q`), and a graph-
   reconstruction loss.
-- **DIRAC** (`configs/dirac.yaml`) — spin-glass env (reward `ΔH/|E|`), structure2vec
+- **DIRAC** (`graco/configs/dirac.yaml`) — spin-glass env (reward `ΔH/|E|`), structure2vec
   node↔edge encoder, lattice-coordinate node features, bootstrap clipped at ≥0.
 
 Also runnable from Python — see `examples/run_finder.py` and `examples/run_dirac.py`.
@@ -167,8 +166,8 @@ Swap the generator + a structure-aware encoder; node/edge/layer *types* flow thr
 the whole RL loop (including replay):
 
 ```bash
-graco train -c dismantling_multiplex    # multilayer  + MultiplexGCN
-graco train -c dismantling_hypergraph   # hypergraph  + HGNN
+graco train -c miner                    # multilayer/multiplex dismantling (GMCC)
+graco train -c hitter                   # hypergraph dismantling (HNHN)
 graco train -c setcover_dqn             # bipartite   + RGCN
 graco train -c maxcut_ppo               # MaxCut      + PPO
 graco train -c community_detection      # modularity / community detection (SBM)

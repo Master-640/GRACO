@@ -15,7 +15,7 @@ pieces provided here are:
   double-DQN, no bootstrap clip) and the graph **reconstruction loss**
   ``α · Σ_edge ||H_u - H_v||² / |E|`` added via the ``_aux_loss`` hook.
 
-Run it with ``configs/finder.yaml``.
+Run it with ``graco train -c finder``.
 """
 
 from __future__ import annotations

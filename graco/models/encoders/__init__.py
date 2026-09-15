@@ -27,6 +27,7 @@ from graco.models.encoders import (  # noqa: F401
     hnhn,
     hypergcn,
     hypergraph,
+    mind,
     mpnn,
     multiplex,
     pna,
@@ -35,4 +36,5 @@ from graco.models.encoders import (  # noqa: F401
     sgc,
     tagcn,
     typed_mpnn,
+    vns,
 )

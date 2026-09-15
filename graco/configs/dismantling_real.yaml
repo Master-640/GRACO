@@ -21,7 +21,7 @@ generator:
   max_nodes: 5000            # skip graphs larger than this (memory guard)
 
 env:
-  type: dismantling
+  type: finder_dismantling   # supplies FINDER's graph aux_feat readout (matches finder.yaml)
   cost_mode: unit
 
 algo:

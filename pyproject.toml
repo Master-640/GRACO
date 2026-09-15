@@ -31,20 +31,19 @@ dependencies = [
     "networkx>=3.0",
     "scipy>=1.10",
     "omegaconf>=2.3",
-    "tqdm>=4.60",
 ]
 
 [project.optional-dependencies]
-pyg = ["torch-geometric>=2.4"]
 logging = ["tensorboard>=2.12", "wandb>=0.15"]
-dev = ["pytest>=7.0", "pytest-cov", "ruff>=0.6", "einops"]
+solvers = ["pulp>=2.7"]            # exact ILP baselines (graco.heuristics.solvers)
+dev = ["pytest>=7.0", "pytest-cov", "ruff>=0.6"]
 all = [
-    "torch-geometric>=2.4",
     "tensorboard>=2.12",
     "wandb>=0.15",
+    "pulp>=2.7",
     "pytest>=7.0",
+    "pytest-cov",
     "ruff>=0.6",
-    "einops",
 ]
 
 [project.scripts]
@@ -52,7 +51,6 @@ graco = "graco.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/graco/graco"
-Documentation = "https://github.com/graco/graco/tree/main/docs"
 
 [tool.setuptools.packages.find]
 include = ["graco*"]

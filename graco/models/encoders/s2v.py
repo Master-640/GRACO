@@ -65,23 +65,30 @@ class Structure2Vec(GNNEncoder):
         return w.view(graph.num_edges, 1).float()
 
     def forward(self, graph: BatchedGraph) -> Tensor:
+        src, dst, n, edge_init, cur_node = self._init_propagation(graph)
+        for _ in range(self.num_layers):
+            cur_node = self._round(cur_node, edge_init, src, dst, n)
+        return cur_node
+
+    def _init_propagation(self, graph: BatchedGraph):
+        """Shared setup: input projection, fixed edge embedding, initial node state."""
         x = self.input_x(graph)
         src, dst = graph.edge_index[0], graph.edge_index[1]
         n = graph.num_nodes
-
-        edge_init = F.relu(self.w_e2l(self._edge_features(graph)))  # [E, H] fixed across iters
+        edge_init = F.relu(self.w_e2l(self._edge_features(graph)))  # [E, H] fixed across rounds
         cur_node = self._l2(F.relu(self.w_n2l(x)))  # [N, H]
+        return src, dst, n, edge_init, cur_node
 
-        for _ in range(self.num_layers):
-            prev = cur_node
-            msg = self.p_node_conv1(cur_node)  # [N, H]
-            n2e = msg.index_select(0, src)  # [E, H]
-            cur_edge = self._l2(
-                F.relu(torch.cat([self.trans_edge_1(n2e), self.trans_edge_2(edge_init)], dim=-1))
-            )  # [E, H]
-            e2n = scatter_sum(cur_edge, dst, n)  # [N, H]
-            cur_node_new = self._l2(
-                F.relu(torch.cat([self.trans_node_1(e2n), self.trans_node_2(cur_node)], dim=-1))
-            )  # [N, H]
-            cur_node = self.w_l(torch.cat([cur_node_new, prev], dim=-1))  # [N, H]
-        return cur_node
+    def _round(self, cur_node: Tensor, edge_init: Tensor, src: Tensor, dst: Tensor, n: int) -> Tensor:
+        """One structure2vec node+edge refinement round -> new node state ``[N, H]``."""
+        prev = cur_node
+        msg = self.p_node_conv1(cur_node)  # [N, H]
+        n2e = msg.index_select(0, src)  # [E, H]
+        cur_edge = self._l2(
+            F.relu(torch.cat([self.trans_edge_1(n2e), self.trans_edge_2(edge_init)], dim=-1))
+        )  # [E, H]
+        e2n = scatter_sum(cur_edge, dst, n)  # [N, H]
+        cur_node_new = self._l2(
+            F.relu(torch.cat([self.trans_node_1(e2n), self.trans_node_2(cur_node)], dim=-1))
+        )  # [N, H]
+        return self.w_l(torch.cat([cur_node_new, prev], dim=-1))  # [N, H]

@@ -39,7 +39,7 @@ if __name__ == "__main__":
     from graco.utils.config import load_config
 
     cfg = load_config(
-        "configs/debug.yaml",
+        "debug",
         overrides=["algo.model.encoder.type=mean_mlp", "algo.model.encoder.hidden_dim=32"],
     )
     Trainer(cfg).train()

@@ -9,6 +9,7 @@ baseline), A2C, PPO; off-policy stochastic — Discrete SAC.
 from graco.algos.base import Algorithm  # noqa: F401
 from graco.algos.c51 import C51Algorithm  # noqa: F401
 from graco.algos.dqn import DQNAlgorithm, QRDQNAlgorithm  # noqa: F401
+from graco.algos.grlnd import GRLND  # noqa: F401
 from graco.algos.iqn import IQNAlgorithm  # noqa: F401  (also registers the IQN head)
 from graco.algos.label_dqn import LabelDQNAlgorithm  # noqa: F401
 from graco.algos.munchausen import MunchausenDQNAlgorithm  # noqa: F401
@@ -33,4 +34,5 @@ __all__ = [
     "SACAlgorithm",
     "SentinelPredictorDQN",
     "LabelDQNAlgorithm",
+    "GRLND",
 ]

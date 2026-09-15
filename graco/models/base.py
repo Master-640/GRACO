@@ -9,7 +9,7 @@ scatter-based message-passing layers — see :mod:`graco.models.encoders`.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -30,6 +30,26 @@ def get_activation(name: str) -> Callable[[Tensor], Tensor]:
         "identity": lambda x: x,
         "silu": F.silu,
     }[name]
+
+
+def gcn_norm(graph: BatchedGraph, add_self_loops: bool = True) -> Tuple[Tensor, Tensor]:
+    """Symmetric-normalized adjacency coefficients ``D^{-1/2} A D^{-1/2}``.
+
+    Returns per-edge coefficients ``c_ij`` ``[E]`` and the self coefficient
+    ``c_ii`` ``[N]``.  With ``add_self_loops=True`` (the GCN renormalization
+    trick, and this framework's default) the degree is ``deg + 1`` — which also
+    clamps isolated nodes to 1; with ``add_self_loops=False`` the degree is
+    ``clamp(deg, min=1)`` and only ``c_ij`` is meaningful (ChebNet's Laplacian).
+    Edge weights, when present, multiply ``c_ij``.  Shared by gcn / gcnii / sgc /
+    appnp / arma / tagcn / chebnet so the normalization lives in one place.
+    """
+    deg = (graph.degree() + 1.0) if add_self_loops else graph.degree().clamp(min=1.0)
+    dinv = deg.pow(-0.5)
+    src, dst = graph.edge_index[0], graph.edge_index[1]
+    c = dinv.index_select(0, dst) * dinv.index_select(0, src)  # [E]
+    if graph.edge_weight is not None:
+        c = c * graph.edge_weight
+    return c, 1.0 / deg
 
 
 class Normalizer(nn.Module):

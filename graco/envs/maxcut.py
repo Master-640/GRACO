@@ -67,7 +67,11 @@ class _IsingEnv(VectorizedEnv):
     def node_features(graph: BatchedGraph, state: State) -> Tensor:
         spin = _spin(state["selected"]).unsqueeze(-1)  # [N,1]
         deg = graph.degree()
-        deg_max = graph.broadcast_to_nodes(graph.pool(deg.unsqueeze(-1), reduce="max")).clamp_min(1)
+        if "maxcut_deg_max" not in graph._cache:  # pure topology — cache across the episode
+            graph._cache["maxcut_deg_max"] = graph.broadcast_to_nodes(
+                graph.pool(deg.unsqueeze(-1), reduce="max")
+            ).clamp_min(1)
+        deg_max = graph._cache["maxcut_deg_max"]
         deg_norm = (deg.unsqueeze(-1) / deg_max)
         ones = torch.ones_like(spin)
         return torch.cat([spin, deg_norm, ones], dim=-1)  # [N,3]

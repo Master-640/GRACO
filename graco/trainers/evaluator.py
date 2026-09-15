@@ -74,7 +74,7 @@ class Evaluator:
                 out[f"eval/{k}"] = float(v.mean())
         primary = policy[self.metric].mean()
         for name in self.baselines:
-            fn = baseline_score_fn(name)
+            fn = baseline_score_fn(name, self.env)
             b = self._run(
                 lambda obs, fn=fn: segment_argmax(
                     fn(obs), obs.graph.batch, obs.graph.num_graphs, obs.action_mask

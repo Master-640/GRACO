@@ -2,7 +2,7 @@
 
 Usage::
 
-    graco train  --config configs/dismantling_finder_dqn.yaml [key=value ...]
+    graco train  --config finder [key=value ...]   # or a path: --config path/to.yaml
     graco eval   --config <cfg> --ckpt runs/exp/best.pt
     graco generate --config <cfg> --out data/graphs.pt --num 100
     graco benchmark --config <cfg> [--ckpt runs/exp/best.pt] [--num 128] [--data <path|name>]

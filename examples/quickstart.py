@@ -8,7 +8,7 @@ import graco
 # Train from a shipped config (resolved by short name). `key__sub=value` is sugar
 # for the OmegaConf dotted override `key.sub=value`.
 trainer = graco.train(
-    "dismantling_finder",
+    "dismantling_dqn",
     device="auto",
     trainer__num_envs=32,
     trainer__iterations=300,

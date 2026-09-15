@@ -12,10 +12,8 @@ from typing import Callable, Dict
 import torch
 from torch import Tensor
 
-from graco.data.batch import BatchedGraph
 from graco.envs.base import Observation, VectorizedEnv
 from graco.utils.scatter import scatter_sum
-from graco.utils.segment_ops import segment_argmax
 
 ScoreFn = Callable[[Observation], Tensor]  # obs -> per-node scores [N]
 
@@ -44,30 +42,25 @@ BASELINES: Dict[str, ScoreFn] = {
 }
 
 
-@torch.no_grad()
-def run_episode(env: VectorizedEnv, graph: BatchedGraph, score_fn: ScoreFn) -> Dict[str, Tensor]:
-    """Roll out one batched episode picking argmax(score) each step.
+def baseline_score_fn(name: str, env: VectorizedEnv | None = None) -> ScoreFn:
+    """Resolve a baseline name to a per-node score function.
 
-    Returns per-graph episode return ``[B]`` and final objective ``[B]``.
+    Native names (``random`` / ``degree`` / ``adaptive_degree``) are returned
+    directly.  Any other name falls back to a registered
+    :class:`~graco.heuristics.base.ScoreHeuristic` (e.g. ``corehd``,
+    ``collective_influence``, ``betweenness``), so the whole constructive-heuristic
+    zoo is usable as an eval baseline with no duplication.
     """
-    obs = env.reset(graph)
-    ret = torch.zeros(env.num_envs, device=env.device)
-    steps = 0
-    max_steps = int(graph.graph_num_nodes.max().item()) + 2
-    while not obs.done.all():
-        scores = score_fn(obs)
-        action = segment_argmax(scores, obs.graph.batch, obs.graph.num_graphs, obs.action_mask)
-        step = env.step(action)
-        ret += step.reward
-        obs = step.obs
-        steps += 1
-        if steps > max_steps:
-            break
-    objective = env.objective(env.graph, env.state)
-    return {"return": ret, "objective": objective, "steps": steps}
+    if name in BASELINES:
+        return BASELINES[name]
+    from graco.heuristics.base import HEURISTICS, ScoreHeuristic  # lazy: avoid import cycle
 
-
-def baseline_score_fn(name: str) -> ScoreFn:
-    if name not in BASELINES:
-        raise KeyError(f"Unknown baseline '{name}'. Available: {sorted(BASELINES)}")
-    return BASELINES[name]
+    try:
+        heuristic = HEURISTICS.get(name)()
+    except Exception as exc:  # unknown name
+        raise KeyError(
+            f"Unknown baseline '{name}'. Available: {sorted(BASELINES)} + registered ScoreHeuristics"
+        ) from exc
+    if not isinstance(heuristic, ScoreHeuristic):
+        raise KeyError(f"Baseline '{name}' is not a per-node ScoreHeuristic")
+    return lambda obs: heuristic.score(env, obs)

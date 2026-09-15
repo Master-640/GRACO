@@ -49,7 +49,6 @@ class FileDataset(GraphGenerator):
     def _pool(self) -> List:
         if self._graphs is None:
             self._graphs = load_graphs(self.path, self.fmt, self.file_weighted, self.max_nodes)
-            print(f"[dataset] loaded {len(self._graphs)} graph(s) from {self.path!r}")
         return self._graphs
 
     def _edges(self, n: int, rng) -> Tensor:  # not used; sample() overridden

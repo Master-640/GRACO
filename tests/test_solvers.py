@@ -51,7 +51,7 @@ def test_benchmark_reports_gap_column():
     from graco.eval.benchmark import format_table, run_benchmark
     from graco.utils.config import load_config
 
-    cfg = load_config("configs/maxcut_ppo.yaml")
+    cfg = load_config("maxcut_ppo")
     cfg.generator = OmegaConf.create(
         {"type": "er", "num_nodes": [12, 12], "p": 0.4, "weighted": True, "weight_dist": "bimodal"}
     )

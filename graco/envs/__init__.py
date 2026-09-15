@@ -18,6 +18,14 @@ from graco.envs.mis import MISEnv  # noqa: F401
 from graco.envs.modularity import ModularityEnv  # noqa: F401
 from graco.envs.mvc import MVCEnv  # noqa: F401
 from graco.envs.mwis import MWISEnv  # noqa: F401
+from graco.envs.nd_extra import (  # noqa: F401
+    CascadeHypergraphDismantlingEnv,
+    CombatDismantlingEnv,
+    EdgeDismantlingEnv,
+    MultiplexDismantlingEnv,
+    PairwiseDismantlingEnv,
+    SISDismantlingEnv,
+)
 from graco.envs.qubo import QUBOEnv  # noqa: F401
 from graco.envs.sentinel import SentinelSelectionEnv  # noqa: F401
 from graco.envs.setcover import SetCoverEnv  # noqa: F401
@@ -45,5 +53,11 @@ __all__ = [
     "MaxKCutEnv",
     "GraphColoringEnv",
     "LabelEnv",
+    "PairwiseDismantlingEnv",
+    "EdgeDismantlingEnv",
+    "MultiplexDismantlingEnv",
+    "SISDismantlingEnv",
+    "CombatDismantlingEnv",
+    "CascadeHypergraphDismantlingEnv",
     "SentinelSelectionEnv",
 ]

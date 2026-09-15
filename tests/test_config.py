@@ -67,7 +67,7 @@ def test_load_config_include_and_override(tmp_path):
 
 
 def test_end_to_end_debug_config():
-    cfg = load_config("configs/debug.yaml", overrides=["trainer.iterations=3", "trainer.eval_every=0", "device=cpu"])
+    cfg = load_config("debug", overrides=["trainer.iterations=3", "trainer.eval_every=0", "device=cpu"])
     from graco.trainers.trainer import Trainer
 
     trainer = Trainer(cfg)

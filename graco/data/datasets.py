@@ -21,6 +21,7 @@ from __future__ import annotations
 import glob
 import gzip
 import io
+import warnings
 from pathlib import Path
 from typing import List, Optional
 
@@ -177,7 +178,7 @@ def load_graphs(
         try:
             g = read_networkx(f, fmt, weighted)
         except Exception as exc:  # skip unreadable files but keep going
-            print(f"[datasets] skip {f}: {exc}")
+            warnings.warn(f"skipping unreadable graph file {f}: {exc}", stacklevel=2)
             continue
         if g.number_of_nodes() == 0:
             continue

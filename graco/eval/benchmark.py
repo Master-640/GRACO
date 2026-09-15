@@ -12,7 +12,7 @@ return = -ANC) and :attr:`VectorizedEnv.maximize` picks the sort direction.
 
     from graco.eval.benchmark import run_benchmark
     from graco.utils.config import load_config
-    run_benchmark(load_config("configs/finder.yaml"), ckpt="runs/finder/best.pt")
+    run_benchmark(load_config("finder"), ckpt="runs/finder/best.pt")
 """
 
 from __future__ import annotations

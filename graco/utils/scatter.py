@@ -56,8 +56,7 @@ def scatter_max(
     idx = _broadcast_index(index, src)
     out.scatter_reduce_(0, idx, src, reduce="amax", include_self=True)
     fill = 0.0 if fill_value is None else fill_value
-    out = torch.where(out <= neg_inf, torch.full_like(out, fill), out)
-    return out
+    return out.masked_fill(out <= neg_inf, fill)
 
 
 def scatter_min(
@@ -68,20 +67,7 @@ def scatter_min(
     idx = _broadcast_index(index, src)
     out.scatter_reduce_(0, idx, src, reduce="amin", include_self=True)
     fill = 0.0 if fill_value is None else fill_value
-    out = torch.where(out >= pos_inf, torch.full_like(out, fill), out)
-    return out
-
-
-def scatter(src: Tensor, index: Tensor, dim_size: int, reduce: str = "sum") -> Tensor:
-    if reduce in ("sum", "add"):
-        return scatter_sum(src, index, dim_size)
-    if reduce == "mean":
-        return scatter_mean(src, index, dim_size)
-    if reduce in ("max", "amax"):
-        return scatter_max(src, index, dim_size)
-    if reduce in ("min", "amin"):
-        return scatter_min(src, index, dim_size)
-    raise ValueError(f"Unknown reduce='{reduce}'")
+    return out.masked_fill(out >= pos_inf, fill)
 
 
 def scatter_softmax(src: Tensor, index: Tensor, dim_size: int) -> Tensor:

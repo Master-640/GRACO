@@ -98,22 +98,30 @@ class Trainer:
             graph = self.algo.on_sample(graph)  # POMO multi-start / augmentation hook
             obs = self.env.reset(graph)
             self.algo.on_episode_start(self.env)
+            self.algo.set_progress(it / max(1, self.iterations), self.grad_from_env_steps)
 
             step_metrics: Dict[str, float] = {}
             steps = 0
-            while not obs.done.all():
-                self.algo.set_progress(it / max(1, self.iterations), self.grad_from_env_steps)
-                action = self.algo.act(obs, explore=True)
-                step = self.env.step(action)
-                self.algo.observe(self.env, obs, action, step)
-                m = self.algo.after_step()
-                if m:
-                    step_metrics = m
-                obs = step.obs
-                steps += 1
+            if self.algo.single_step:
+                # one-shot algos (GRLND): select a whole removal set in a single pass
+                step_metrics = self.algo.learn_step(self.env, obs) or {}
+                steps = 1
                 self.grad_from_env_steps += 1
+                ep_metrics: Dict[str, float] = {}
+            else:
+                while not obs.done.all():
+                    self.algo.set_progress(it / max(1, self.iterations), self.grad_from_env_steps)
+                    action = self.algo.act(obs, explore=True)
+                    step = self.env.step(action)
+                    self.algo.observe(self.env, obs, action, step)
+                    m = self.algo.after_step()
+                    if m:
+                        step_metrics = m
+                    obs = step.obs
+                    steps += 1
+                    self.grad_from_env_steps += 1
 
-            ep_metrics = self.algo.after_episode(self.env) or {}
+                ep_metrics = self.algo.after_episode(self.env) or {}
             iter_time = time.time() - t0
 
             if it % self.log_every == 0:

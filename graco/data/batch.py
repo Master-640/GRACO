@@ -92,8 +92,10 @@ class BatchedGraph:
     @property
     def graph_num_edges(self) -> Tensor:
         """Per-graph edge count ``[B]`` (directed edges)."""
-        ones = torch.ones(self.num_edges, device=self.device, dtype=torch.long)
-        return scatter_sum(ones, self.edge_batch, self.num_graphs)
+        if "graph_num_edges" not in self._cache:
+            ones = torch.ones(self.num_edges, device=self.device, dtype=torch.long)
+            self._cache["graph_num_edges"] = scatter_sum(ones, self.edge_batch, self.num_graphs)
+        return self._cache["graph_num_edges"]
 
     @property
     def graph_num_undirected_edges(self) -> Tensor:

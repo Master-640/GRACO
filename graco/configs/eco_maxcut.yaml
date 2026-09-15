@@ -6,9 +6,6 @@ base: base.yaml
 
 run_name: eco_maxcut
 
-# improvement.py is not auto-imported by graco.envs.__init__; register it here.
-imports: [graco.envs.improvement]
-
 generator:
   type: er                  # Erdos-Renyi
   num_nodes: [40, 60]

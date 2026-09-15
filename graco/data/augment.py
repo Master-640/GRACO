@@ -1,16 +1,12 @@
 """Graph data augmentation + batch replication.
 
-Two building blocks reused by inference decoding (F3), POMO multi-start (F5) and
-training-time augmentation (F6):
+Used by inference decoding and POMO multi-start:
 
-* :func:`permute_batch` — relabel each graph's nodes by a random permutation.
-  The graph is isomorphic, so every environment's objective is invariant, but it
-  breaks any spurious dependence on node indexing (the graph analogue of RL4CO's
-  dihedral ×8 augmentation).
 * :func:`repeat_graphs` — replicate each graph ``k`` times into one disjoint-union
-  batch (optionally permuting each copy), returning a ``group`` vector that maps
-  every copy back to its source graph — so N independent rollouts per graph can be
-  reduced with a per-group max / mean.
+  batch (optionally permuting each copy via :func:`_permute_single`, an isomorphic
+  node relabelling that leaves every environment's objective invariant), returning
+  a ``group`` vector that maps every copy back to its source graph — so N
+  independent rollouts per graph can be reduced with a per-group max / mean.
 """
 
 from __future__ import annotations
@@ -42,13 +38,6 @@ def _permute_single(sg: SingleGraph, generator: Optional[torch.Generator]) -> Si
         num_hyperedges=sg.num_hyperedges,
         meta_scalars=dict(sg.meta_scalars),
     )
-
-
-def permute_batch(bg: BatchedGraph, generator: Optional[torch.Generator] = None) -> BatchedGraph:
-    """Randomly relabel every graph's nodes (isomorphic; objective-invariant)."""
-    sgs = [_permute_single(sg, generator) for sg in to_single_graphs(bg)]
-    out, _ = collate_single_graphs(sgs, bg.device)
-    return out
 
 
 def repeat_graphs(

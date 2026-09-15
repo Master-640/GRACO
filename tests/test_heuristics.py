@@ -89,10 +89,10 @@ def test_benchmark_runner():
     from graco.eval.benchmark import run_benchmark
     from graco.utils.config import load_config
 
-    res = run_benchmark(load_config("configs/mvc_dqn.yaml"), num=16)
+    res = run_benchmark(load_config("mvc_dqn"), num=16)
     assert len(res) >= 2
     for m, row in res.items():
         assert "objective_mean" in row and "return_mean" in row and "seconds" in row
     # method filter
-    res2 = run_benchmark(load_config("configs/finder.yaml"), num=16, methods=["degree", "random"])
+    res2 = run_benchmark(load_config("finder"), num=16, methods=["degree", "random"])
     assert set(res2) == {"degree", "random"}

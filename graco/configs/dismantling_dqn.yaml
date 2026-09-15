@@ -1,8 +1,9 @@
-# Network dismantling on Barabási–Albert graphs (FINDER-ND lineage):
-# GraphSAGE encoder + Double/n-step DQN, reward = -LCC/n^2.
+# Generic network-dismantling DQN on Barabási–Albert graphs:
+# GraphSAGE encoder + Double/n-step DQN, reward = -LCC/n^2. This is a plain
+# dismantling-DQN baseline — for the faithful FINDER reproduction see finder.yaml.
 base: base.yaml
 
-run_name: dismantling_finder
+run_name: dismantling_dqn
 
 generator:
   type: barabasi_albert

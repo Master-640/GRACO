@@ -345,3 +345,61 @@ class InfluenceDegreeHeuristic(ScoreHeuristic):
         src, dst = g.edge_index[0], g.edge_index[1]
         adj_to_seed = scatter_sum(seeds[src].float(), dst, g.num_nodes)  # #seed neighbours
         return deg - adj_to_seed
+
+
+# ------------------------------------------------ high-impact dismantling rules
+
+
+@HEURISTICS.register("corehd", aliases=["core_hd"])
+class CoreHDHeuristic(ScoreHeuristic):
+    """CoreHD dismantling (Zdeborová, Zhang & Zhou, *Sci. Rep.* 2016).
+
+    Repeatedly remove the **highest-degree node in the 2-core** of the remaining
+    graph (decycling); once the 2-core is empty the graph is a forest and it falls
+    back to plain degree (the tree-breaking phase).  The 2-core of the active
+    subgraph is found by vectorized iterative peeling (drop active nodes whose
+    active degree < 2 until stable).
+    """
+
+    name = "corehd"
+    supports = (DismantlingEnv,)
+
+    def score(self, env: VectorizedEnv, obs: Observation) -> Tensor:
+        g = obs.graph
+        n = g.num_nodes
+        src, dst = g.edge_index[0], g.edge_index[1]
+        active = ~env.state["selected"]
+        deg = scatter_sum((active[src] & active[dst]).float(), src, n)  # active-subgraph degree
+        core = active.clone()
+        for _ in range(n + 1):  # 2-core peeling (bounded; breaks at fixpoint)
+            cdeg = scatter_sum((core[src] & core[dst]).float(), src, n)
+            drop = core & (cdeg < 2)
+            if not bool(drop.any()):
+                break
+            core = core & ~drop
+        big = deg.max().clamp_min(1.0) + 1.0
+        return deg + big * core.float()  # 2-core first (by degree), then forest by degree
+
+
+@HEURISTICS.register("collective_influence_l2", aliases=["ci2", "collective_influence_2"])
+class CollectiveInfluenceL2Heuristic(ScoreHeuristic):
+    """Collective Influence at radius ℓ=2 (Morone & Makse, *Nature* 2015).
+
+    ``CI₂(i) = (k_i-1) · Σ_{j in the 2-hop neighbourhood} (k_j-1)`` on the active
+    subgraph — a longer-range version of the ℓ=1 rule, obtained by propagating
+    ``(k-1)`` two hops with scatter.
+    """
+
+    name = "collective_influence_l2"
+    supports = (DismantlingEnv,)
+
+    def score(self, env: VectorizedEnv, obs: Observation) -> Tensor:
+        g = obs.graph
+        n = g.num_nodes
+        src, dst = g.edge_index[0], g.edge_index[1]
+        ae = (~env.state["selected"])[src] & (~env.state["selected"])[dst]
+        ae = ae.float()
+        km1 = (scatter_sum(ae, src, n) - 1.0).clamp_min(0.0)
+        h1 = scatter_sum(ae * km1[dst], src, n)  # Σ over 1-hop of (k-1)
+        h2 = scatter_sum(ae * h1[dst], src, n)  # propagate a 2nd hop
+        return km1 * h2

@@ -11,7 +11,7 @@ the framework; the two DIRAC-specific pieces provided here are:
   normalized lattice coordinates (DIRAC's ``node_coords / n``), exactly as in the
   reference; the 4-d edge features are inherited unchanged.
 
-Run it with ``configs/dirac.yaml``.  The DQN hyper-parameters (n_step=3, no
+Run it with ``graco train -c dirac``.  The DQN hyper-parameters (n_step=3, no
 double-DQN, bootstrap clipped at 0, s2v encoder, 3D lattice) live in that config.
 """
 

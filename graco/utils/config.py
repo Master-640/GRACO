@@ -29,18 +29,18 @@ def resolve_config_path(name: str) -> str:
     """Resolve a config given as a file path **or** a short name.
 
     ``"configs/maxcut_ppo.yaml"`` (a real file) is returned as-is; a bare name
-    like ``"maxcut_ppo"`` is looked up as ``<name>.yaml`` under the ``configs/``
-    directory of the current working dir and of the installed package, so users
-    can write ``graco train -c maxcut_ppo`` instead of the full path.
+    like ``"maxcut_ppo"`` is looked up as ``<name>.yaml`` under a ``configs/``
+    directory in the current working dir (user configs) or under the bundled
+    ``graco/configs`` (shipped with the package), so users can write
+    ``graco train -c maxcut_ppo`` instead of the full path.
     """
     p = Path(name)
     if p.is_file():
         return str(p)
     cand = name if name.endswith((".yaml", ".yml")) else f"{name}.yaml"
     roots = [
-        Path.cwd() / "configs",
-        Path(__file__).resolve().parent.parent.parent / "configs",  # repo root
-        Path(__file__).resolve().parent.parent / "configs",  # packaged (if bundled)
+        Path.cwd() / "configs",  # user configs in the working dir (optional)
+        Path(__file__).resolve().parent.parent / "configs",  # bundled: graco/configs
     ]
     for root in roots:
         f = root / cand
@@ -56,7 +56,11 @@ def resolve_config_path(name: str) -> str:
 
 def list_configs() -> List[str]:
     """Names (without extension) of the bundled example configs, sorted."""
-    for root in (Path.cwd() / "configs", Path(__file__).resolve().parent.parent.parent / "configs"):
+    roots = [
+        Path.cwd() / "configs",  # user-provided configs in the working dir (optional)
+        Path(__file__).resolve().parent.parent / "configs",  # bundled: graco/configs
+    ]
+    for root in roots:
         if root.is_dir():
             return sorted(p.stem for p in root.glob("*.yaml"))
     return []
@@ -65,7 +69,6 @@ def list_configs() -> List[str]:
 def load_config(
     path: Optional[str] = None,
     overrides: Optional[Sequence[str]] = None,
-    base_dir: Optional[str] = None,
 ) -> DictConfig:
     """Load a config from ``path`` and apply ``key=value`` dotted overrides.
 

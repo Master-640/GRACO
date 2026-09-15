@@ -71,7 +71,7 @@ def laplacian_pe(graph: BatchedGraph, k: int = 4) -> Tensor:
         deg = a.sum(-1).clamp_min(1e-8)
         dinv = deg.pow(-0.5)
         lap = torch.eye(n, device=a.device) - dinv.unsqueeze(1) * a * dinv.unsqueeze(0)
-        evals, evecs = torch.linalg.eigh(lap)
+        _, evecs = torch.linalg.eigh(lap)
         take = evecs[:, 1 : k + 1]  # skip the trivial component
         out[lo:hi, : take.shape[1]] = take.float()
     return out

@@ -230,8 +230,5 @@ class Buffer(ABC):
     @abstractmethod
     def __len__(self) -> int: ...
 
-    def can_sample(self, batch_size: int) -> bool:
-        return len(self) >= batch_size
-
     def update_priorities(self, indices: Tensor, td_errors: Tensor) -> None:
         """No-op unless the buffer is prioritized."""

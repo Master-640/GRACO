@@ -75,7 +75,7 @@ def test_benchmark_on_real_graphs(tmp_path):
     for i in range(3):
         g = nx.barabasi_albert_graph(20, 3, seed=i)
         nx.write_edgelist(g, str(d / f"g{i}.edges"), data=False)
-    cfg = load_config("configs/dismantling_finder.yaml")
+    cfg = load_config("dismantling_dqn")
     cfg.generator = OmegaConf.create({"type": "dataset", "path": str(d), "mode": "all"})
     res = run_benchmark(cfg, num=3)
     assert len(res) >= 2

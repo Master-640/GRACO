@@ -33,6 +33,9 @@ from graco.envs.base import Observation, StepResult, VectorizedEnv
 class Algorithm(ABC):
     #: "step" -> Trainer may call after_step every env step; "episode" -> only after episodes
     learns_online: bool = False
+    #: single-step algos (e.g. GRLND) select a whole removal set in one forward pass;
+    #: the Trainer runs :meth:`learn_step` once per iteration instead of the sequential loop.
+    single_step: bool = False
 
     def __init__(self, env: VectorizedEnv, device: Any = "cpu", gamma: float = 1.0):
         self.env = env
@@ -73,6 +76,10 @@ class Algorithm(ABC):
 
     def after_episode(self, env: VectorizedEnv) -> Optional[Dict[str, float]]:
         """Push transitions / on-policy update at episode end. Default: no-op."""
+        return None
+
+    def learn_step(self, env: VectorizedEnv, obs: Observation) -> Optional[Dict[str, float]]:
+        """One-shot training step for :attr:`single_step` algos (default: unused)."""
         return None
 
     # ---------------------------------------------------------- checkpointing

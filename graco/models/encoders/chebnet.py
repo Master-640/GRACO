@@ -27,7 +27,7 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from graco.data.batch import BatchedGraph
-from graco.models.base import GNNEncoder, Normalizer
+from graco.models.base import GNNEncoder, Normalizer, gcn_norm
 from graco.registries import ENCODERS
 from graco.utils.scatter import scatter_sum
 
@@ -60,16 +60,6 @@ class ChebNetEncoder(GNNEncoder):
         )
         self._dims = dims
 
-    def _lap_coef(self, graph: BatchedGraph) -> Tensor:
-        """Per-edge coefficient of ``D^{-1/2} A D^{-1/2}`` [E] (no self-loop)."""
-        deg = graph.degree().clamp(min=1.0)  # no +1; clamp isolated to avoid inf
-        dinv = deg.pow(-0.5)
-        src, dst = graph.edge_index[0], graph.edge_index[1]
-        c = dinv.index_select(0, dst) * dinv.index_select(0, src)
-        if graph.edge_weight is not None:
-            c = c * graph.edge_weight
-        return c
-
     def _ahat(self, h: Tensor, src: Tensor, dst: Tensor, c: Tensor, num_nodes: int) -> Tensor:
         """Symmetric-normalized adjacency product ``D^{-1/2} A D^{-1/2} h``."""
         return scatter_sum(h.index_select(0, src) * c.unsqueeze(-1), dst, num_nodes)
@@ -77,7 +67,7 @@ class ChebNetEncoder(GNNEncoder):
     def forward(self, graph: BatchedGraph) -> Tensor:
         x = self.input_x(graph)
         src, dst = graph.edge_index[0], graph.edge_index[1]
-        c = self._lap_coef(graph)
+        c = gcn_norm(graph, add_self_loops=False)[0]
         n = graph.num_nodes
 
         for i, convs in enumerate(self.convs):

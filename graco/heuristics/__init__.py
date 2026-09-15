@@ -1,6 +1,7 @@
 """Heuristic and metaheuristic baselines (greedy, simulated annealing, ...)."""
 
 from graco.heuristics import (  # noqa: F401  (register)
+    adaptive_metaheuristic,
     annealing,
     community,
     greedy,

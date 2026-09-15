@@ -27,7 +27,7 @@ def test_make_helpers_build_components():
 
 
 def test_config_short_name_resolution_and_overrides():
-    # short name resolves to configs/debug.yaml
+    # short name resolves to graco/configs/debug.yaml
     assert resolve_config_path("debug").endswith("debug.yaml")
     assert "debug" in list_configs()
     # key__sub=value sugar maps to the dotted override key.sub=value

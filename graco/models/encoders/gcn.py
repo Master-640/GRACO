@@ -15,14 +15,12 @@ Convolutional Networks" (ICLR 2017).
 
 from __future__ import annotations
 
-from typing import Tuple
-
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
 from graco.data.batch import BatchedGraph
-from graco.models.base import GNNEncoder, Normalizer
+from graco.models.base import GNNEncoder, Normalizer, gcn_norm
 from graco.registries import ENCODERS
 from graco.utils.scatter import scatter_sum
 
@@ -42,20 +40,10 @@ class GCNEncoder(GNNEncoder):
         )
         self._dims = dims
 
-    def _edge_norm(self, graph: BatchedGraph) -> Tuple[Tensor, Tensor]:
-        """Return per-edge coefficient ``c_ij`` [E] and self coefficient ``c_ii`` [N]."""
-        deg = graph.degree() + 1.0  # +1 for the implicit self-loop; clamps isolated -> 1
-        dinv = deg.pow(-0.5)  # 1 / sqrt(deg + 1)
-        src, dst = graph.edge_index[0], graph.edge_index[1]
-        c = dinv.index_select(0, dst) * dinv.index_select(0, src)  # [E]
-        if graph.edge_weight is not None:
-            c = c * graph.edge_weight
-        return c, 1.0 / deg  # c_ii = 1 / (deg_i + 1)
-
     def forward(self, graph: BatchedGraph) -> Tensor:
         x = self.input_x(graph)
         src, dst = graph.edge_index[0], graph.edge_index[1]
-        c, self_coef = self._edge_norm(graph)
+        c, self_coef = gcn_norm(graph)
         for i, lin in enumerate(self.lins):
             wh = lin(x)  # [N, d_out]
             msg = wh.index_select(0, src) * c.unsqueeze(-1)  # [E, d_out]
